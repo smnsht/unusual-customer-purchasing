@@ -1,5 +1,5 @@
 import numpy as np
-from sklearn.cluster import KMeans
+from sklearn.cluster import KMeans, DBSCAN
 from sklearn.metrics import silhouette_score
 
 
@@ -59,3 +59,67 @@ class KMeansTrainingLoop:
             f"best_silhouette={self.best_silhouette:.4f}, "
             f"best_kmeans={self.best_kmeans})"
         )
+
+class DBSCANEvaluation:
+    def __init__(self, X, eps=None, min_samples=5, metric="euclidean"):
+        if not isinstance(X, np.ndarray):
+            raise ValueError("X must be a numpy ndarray.")
+
+        self.X = X
+        if eps is None:
+            self.eps = np.sqrt(X.shape[1])
+        else:
+            self.eps = eps
+
+        self.min_samples = min_samples
+        self.metric = metric
+        self._reset()
+
+    def evaluate(self):
+        # Reset state for repeated calls.
+        self._reset()
+
+        model = DBSCAN(eps=self.eps, min_samples=self.min_samples, metric=self.metric)
+        labels = model.fit_predict(self.X)
+        num_clusters = len(set(labels)) - (1 if -1 in labels else 0)
+
+        cluster_labels = labels[labels != -1]
+        if num_clusters >= 2 and len(cluster_labels) >= 2:
+            non_noise_mask = labels != -1
+            self.silhouette_avg_ = silhouette_score(
+                self.X[non_noise_mask],
+                labels[non_noise_mask],
+                metric=self.metric,
+            )
+
+        self.num_noise_points_ = (labels == -1).sum()
+        self.num_clusters_ = num_clusters
+        self.labels_ = labels
+        self.dbscan_model_ = model
+
+    def _reset(self):
+        self.labels_ = []
+        self.num_clusters_ = 0
+        self.num_noise_points_ = 0
+        self.dbscan_model_ = None
+        self.silhouette_avg_ = None
+
+    def __str__(self):
+        silhouette_info = (
+            str(self.silhouette_avg_)
+            if self.silhouette_avg_ is not None
+            else "not computed."
+        )
+
+        return (
+            f"DBSCAN Evaluation:\n"
+            f"  Epsilon: {self.eps}\n"
+            f"  Min Samples: {self.min_samples}\n"
+            f"  Metric: {self.metric}\n"
+            f"  Number of clusters: {self.num_clusters_}\n"
+            f"  Number of noise points: {self.num_noise_points_}\n"
+            f"  Silhouette score: {silhouette_info}\n"
+        )
+
+    def __repr__(self):
+        return self.__str__()
