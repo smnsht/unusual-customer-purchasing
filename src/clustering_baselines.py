@@ -216,5 +216,105 @@ class DBSCANMinSamplesEstimator:
         
         return "\n".join(lines)
 
+    def __repr__(self):
+        return self.__str__()
+
+
+class DBSCANEpsEstimator:
+    def __init__(self, eps_range, min_samples, metric="euclidean", verbose=False):
+        self.verbose = verbose
+        self.eps_range = eps_range
+        self.min_samples = min_samples
+        self.metric = metric
+
+        self._reset()
+
+    def estimate(self, X):
+        self._reset()
+
+        for eps in self.eps_range:
+            dbscan = DBSCANEvaluation(
+                X, eps=eps, min_samples=self.min_samples, metric=self.metric
+            )
+            dbscan.evaluate()
+
+            self.eps_.append(eps)
+            self.silhouette_avg_.append(dbscan.silhouette_avg_)
+            self.num_clusters_.append(dbscan.num_clusters_)
+            self.labels_.append(dbscan.labels_)
+            self.num_noise_points_.append(dbscan.num_noise_points_)
+
+            if self.verbose:
+                print(dbscan)
+
+    def persist_results(self, project_root, file_path=None):
+        results = {
+            "min_samples": self.min_samples,
+            "metric": self.metric,
+            "eps": self.eps_,
+            "silhouette_avg": self.silhouette_avg_,
+            "num_clusters": self.num_clusters_,
+            "num_noise_points": self.num_noise_points_,
+            "labels": self.labels_,
+        }
+
+        if file_path is None:
+            file_path = f"{project_root}/data/{self._mk_file_name()}"
+
+        np.savez(file_path, **results)
+
+    def load_results(self, project_root, file_path=None):
+        if file_path is None:
+            file_path = f"{project_root}/data/{self._mk_file_name()}"
+
+        if not Path(file_path).exists():
+            return False
+
+        data = np.load(file_path, allow_pickle=True)
+
+        self.eps_ = data["eps"].tolist()
+        self.silhouette_avg_ = data["silhouette_avg"].tolist()
+        self.num_clusters_ = data["num_clusters"].tolist()
+        self.labels_ = data["labels"].tolist()
+        self.num_noise_points_ = data["num_noise_points"].tolist()
+
+        return True
+
+    def _mk_file_name(self):
+        return f"dbscan_eps_estimation_min_samples_{self.min_samples}_{self.metric}.npz"
+
+    def _reset(self):
+        self.eps_ = []
+        self.silhouette_avg_ = []
+        self.num_clusters_ = []
+        self.labels_ = []
+        self.num_noise_points_ = []
+
+    def __str__(self):
+        lines = [
+            f"DBSCANEpsEstimator(eps_range={self.eps_range[0]} .. {self.eps_range[-1]}, min_samples={self.min_samples}, metric={self.metric})",
+        ]
+
+        if self.silhouette_avg_:
+            min_max_silhouette = np.nan_to_num(self.silhouette_avg_)
+            lines.append(
+                f"  Silhouette score min to max: {min_max_silhouette[0]} to {min_max_silhouette[1]}"
+            )
+
+        if self.num_clusters_:
+            lines.append(
+                f"  Number of clusters min to max: {min(self.num_clusters_)} to {max(self.num_clusters_)}"
+            )
+
+        if self.num_noise_points_:
+            lines.append(
+                f"  Number of noise points min to max: {min(self.num_noise_points_)} to {max(self.num_noise_points_)}"
+            )
+
+        return "\n".join(lines)
+
     def __print__(self):
         return self.__str__()
+
+    def __repr__(self):
+        return self.__str__()        
