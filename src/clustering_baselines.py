@@ -1,4 +1,6 @@
 import numpy as np
+
+from pathlib import Path
 from sklearn.cluster import KMeans, DBSCAN
 from sklearn.metrics import silhouette_score
 
@@ -19,7 +21,7 @@ class KMeansTrainingLoop:
         self.inertias = []
         self.silhouette_scores = []
 
-    def train(self, eval_metric='euclidean'):
+    def train(self, eval_metric="euclidean"):
         # Reset state for repeated calls.
         self.best_k = None
         self.best_silhouette = -1.0
@@ -43,7 +45,9 @@ class KMeansTrainingLoop:
             self.inertias.append(inertia)
 
             if k > 1:
-                silhouette_avg = silhouette_score(x_sample, kmeans.predict(x_sample), metric=eval_metric)
+                silhouette_avg = silhouette_score(
+                    x_sample, kmeans.predict(x_sample), metric=eval_metric
+                )
                 self.silhouette_scores.append(silhouette_avg)
 
                 if silhouette_avg > self.best_silhouette:
@@ -59,6 +63,7 @@ class KMeansTrainingLoop:
             f"best_silhouette={self.best_silhouette:.4f}, "
             f"best_kmeans={self.best_kmeans})"
         )
+
 
 class DBSCANEvaluation:
     def __init__(self, X, eps=None, min_samples=5, metric="euclidean"):
@@ -122,4 +127,94 @@ class DBSCANEvaluation:
         )
 
     def __repr__(self):
+        return self.__str__()
+
+
+class DBSCANMinSamplesEstimator:
+    def __init__(self, eps, min_samples_range, metric="euclidean", verbose=False):
+        self.verbose = verbose
+        self.eps = eps
+        self.min_samples_range = min_samples_range
+        self.metric = metric
+
+        self._reset()
+
+    def estimate(self, X):
+        self._reset()
+
+        for min_samples in self.min_samples_range:
+            dbscan = DBSCANEvaluation(
+                X, eps=self.eps, min_samples=min_samples, metric=self.metric
+            )
+            dbscan.evaluate()
+
+            self.min_samples_.append(min_samples)
+            self.silhouette_avg_.append(dbscan.silhouette_avg_)
+            self.num_clusters_.append(dbscan.num_clusters_)
+            self.labels_.append(dbscan.labels_)
+            self.num_noise_points_.append(dbscan.num_noise_points_)
+
+            if self.verbose:
+                print(dbscan)
+
+    def persist_results(self, project_root, file_path=None):
+        results = {
+            "eps": self.eps,
+            "metric": self.metric,
+            "min_samples": self.min_samples_,
+            "silhouette_avg": self.silhouette_avg_,
+            "num_clusters": self.num_clusters_,
+            "num_noise_points": self.num_noise_points_,
+            "labels": self.labels_,
+        }
+
+        if file_path is None:
+            file_path = f"{project_root}/data/{self._mk_file_name()}"
+
+        np.savez(file_path, **results)
+
+    def load_results(self, project_root, file_path=None):
+        if file_path is None:
+            file_path = f"{project_root}/data/{self._mk_file_name()}"
+        
+        if not Path(file_path).exists():
+            return False
+
+        data = np.load(file_path, allow_pickle=True)
+
+        self.min_samples_ = data["min_samples"].tolist()
+        self.silhouette_avg_ = data["silhouette_avg"].tolist()
+        self.num_clusters_ = data["num_clusters"].tolist()
+        self.labels_ = data["labels"].tolist()
+        self.num_noise_points_ = data["num_noise_points"].tolist()
+
+        return True
+
+    def _mk_file_name(self):
+        return f"dbscan_min_samples_estimation_eps_{self.eps:.3f}_{self.metric}.npz"
+
+    def _reset(self):
+        self.min_samples_ = []
+        self.silhouette_avg_ = []
+        self.num_clusters_ = []
+        self.labels_ = []
+        self.num_noise_points_ = []
+
+    def __str__(self):
+        lines = [
+            f"DBSCANMinSamplesEstimator(eps={self.eps}, min_samples_range={self.min_samples_range[0]} .. {self.min_samples_range[-1]}, metric={self.metric})",            
+        ]
+
+        if self.silhouette_avg_:
+            lines.append(f"  Silhouette score min to max: {min(self.silhouette_avg_)} to {max(self.silhouette_avg_)}")
+
+        if self.num_clusters_:
+            lines.append(f"  Number of clusters min to max: {min(self.num_clusters_)} to {max(self.num_clusters_)}")
+
+        if self.num_noise_points_:
+            lines.append(f"  Number of noise points min to max: {min(self.num_noise_points_)} to {max(self.num_noise_points_)}")
+        
+        return "\n".join(lines)
+
+    def __print__(self):
         return self.__str__()
