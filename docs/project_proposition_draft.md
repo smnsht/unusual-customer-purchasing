@@ -1,27 +1,28 @@
 # About section
-This is a project about discovering unusual customer purchasing behavior, based on shopping transactions.
-Dataset used for this project is a dataset from Kaggle 'online_retail_II.csv'. I will use only UK-related transactions, because they constitute 94.7% of all transactions.
-There are dozens of other countries, but the data outside of UK is insufficient to infer safely about them.
+This is a project about discovering unusual customer purchasing behavior based on shopping transactions.
+The dataset used for this project is 'online_retail_II.csv' from Kaggle. I will use only UK-related transactions, because they constitute 94.7% of all transactions.
+There are dozens of other countries, but the data outside the UK is insufficient to draw safe inferences about them.
 
-In this work I will **not** try to build regression to assess chances of client X to cancel an order, or to predict the shopping basked for given client, **nor** just
-to find out frequent shopping item or split customers into clusters.
+The unit of analysis is the individual invoice, described by both transaction-level features and aggregated customer-level features. A customer may therefore contribute typical invoices to a segment while a few of their extreme invoices are flagged as outliers — their routine behavior clusters normally, while individual atypical transactions stand apart.
 
-In my project I want to discover and characterize customer segments, then identify customers **that do not** fit well into any segment, 
-without predefined knowledge of what is "normal" shopping. Howether, I recognize cancellation behaviour and order total as a main axis of interest.
-For instance, If we discover 3 well-understandable clusters of customers, we will try answers question: "Which are the customers don't fit any of those groups?"
+In this work I will **not** try to build a regression model to assess the chance of client X cancelling an order, or to predict the shopping basket for a given client, **nor** merely to split transactions into clusters as an end in itself.
+
+In this project I want to discover and characterize behavioral segments, then identify transactions and customers **that do not** fit well into any segment, without predefined knowledge of what is "normal" shopping. However, I recognize cancellation behaviour and order total as the main axes of interest.
+For instance, if we discover 3 well-defined clusters, we will try to answer the question: "Which transactions and customers do not fit any of those groups?"
 
 
 ## Primary Objective
-Identify and characterize customers whose purchasing behavior differs substantially from the behavior observed in the major customer segments.
+Identify and characterize purchasing behavior that differs substantially from the behavior observed in the major segments, and trace those outliers back to the customers who produced them.
 
 ## Secondary Objective
 Explore whether meaningful behavioral changes can be detected within a customer's purchasing history over time.
-For example, a customer may exhibit a sudden increase in monthly spending or a significant shift in purchase composition. 
-While the dataset does not allow us to determine the reason for such changes, it allows us to detect and characterize them.
+For example, a customer may exhibit a sudden increase in monthly spending or a significant shift in purchase composition.
+While the dataset does not allow us to determine the reason for such changes, it does allow us to detect and characterize them.
 
 
 ## Business value
-Those questions have significant commercial significance. Understanding unusual customer behavior may help businesses identify high-value customers, customer segments associated with frequent cancellations, and emerging changes in purchasing patterns. Such insights could support retention, marketing, and operational decision making.
+These questions have significant commercial value. Understanding unusual customer behavior may help businesses identify high-value customers, customer segments associated with frequent cancellations, and emerging changes in purchasing patterns. Such insights could support retention, marketing, and operational decision-making.
+
 
 ## Proposed work
 In order to fullfill the primary objective my plan is to build new dataset, customer-centered. I will filter out non-UK transactions, and I will filter out
