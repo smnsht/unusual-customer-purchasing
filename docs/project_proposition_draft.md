@@ -5,19 +5,14 @@ There are dozens of other countries, but the data outside the UK is insufficient
 
 The unit of analysis is the individual invoice, described by both transaction-level features and aggregated customer-level features. A customer may therefore contribute typical invoices to a segment while a few of their extreme invoices are flagged as outliers — their routine behavior clusters normally, while individual atypical transactions stand apart.
 
-In this work I will **not** try to build a regression model to assess the chance of client X cancelling an order, or to predict the shopping basket for a given client, **nor** merely to split transactions into clusters as an end in itself.
+In this work I will **not** try to build a regression model to assess the chance of a customer cancelling an order, or to predict the shopping basket for a given customer, **nor** merely to split transactions into clusters as an end in itself.
 
-In this project I want to discover and characterize behavioral segments, then identify transactions and customers **that do not** fit well into any segment, without predefined knowledge of what is "normal" shopping. However, I recognize cancellation behaviour and order total as the main axes of interest.
+In this project I want to discover and characterize behavioral segments, then identify transactions and customers **that do not** fit well into any segment, without predefined knowledge of what is "normal" shopping. I recognize cancellation behaviour and order total as the main axes of interest.
 For instance, if we discover 3 well-defined clusters, we will try to answer the question: "Which transactions and customers do not fit any of those groups?"
 
 
-## Primary Objective
+## Objective
 Identify and characterize purchasing behavior that differs substantially from the behavior observed in the major segments, and trace those outliers back to the customers who produced them.
-
-## Secondary Objective
-Explore whether meaningful behavioral changes can be detected within a customer's purchasing history over time.
-For example, a customer may exhibit a sudden increase in monthly spending or a significant shift in purchase composition.
-While the dataset does not allow us to determine the reason for such changes, it does allow us to detect and characterize them.
 
 
 ## Business value
@@ -25,26 +20,14 @@ These questions have significant commercial value. Understanding unusual custome
 
 
 ## Proposed work
-In order to fullfill the primary objective my plan is to build new dataset, customer-centered. I will filter out non-UK transactions, and I will filter out
-guiest transactions (transactions without CustomerID). This new dataset will contain enginered features, based on available data: 
-- timing patterns: day of week and hours when shopping, shoppings agerage per month
-- spending patterns: global average, min, max, and std of transactions total sum
-- product patterns: global average, min, max and std of products purchased, most frequently purchased products
+In order to fulfill the objective, my plan is to build the analysis dataset in two stages. First, I will filter out non-UK transactions and guest transactions (those without a CustomerID). Then I will construct a customer-level table of engineered features derived from the available data:
+- timing patterns: day of week and hour of shopping, average number of shopping trips per month
+- spending patterns: global average, min, max, and std of transaction total amount
+- product patterns: global average, min, max, and std of products purchased, and most frequently purchased products
 - order cancellation patterns: percentage of cancelled transactions
 
-Note of feasibilty of anylisys: the question might arize if we have enouth data. Fast and rough evaluation: estimated number of engineered features ~ 50.
-The dataset contains approximately 6,000 identifiable customers. Given the expected feature space, this appears sufficient for clustering and outlier analysis.
+I will then join this customer-level feature table back onto the invoice-level records, so that each invoice is described by both its own transaction-level features and its customer's aggregated behavior. This joined, invoice-level dataset is the unit of analysis for clustering and outlier detection.
 
+Note on feasibility: one may ask whether there is enough data. As a rough estimate, the number of engineered features is ~50, spread across hundreds of thousands of invoices from approximately 6,000 identifiable customers. Given this feature space and sample size, the data appears sufficient for clustering and outlier analysis.
 
-When the customer-centered dataset is prepared, we will first explore customer segmentation using engineered behavioral features.
-
-The resulting customer groups will be used to characterize common patterns of behavior.
-
-We will then identify customers whose behavior significantly differs from the majority of customers or from the identified customer segments.
-
-Particular attention will be given to spending, purchase composition, timing patterns, and cancellation behavior.
-
-In order to fullfill the secondary objective, we will need to analize customers behaviour on temporal axis: instead of global metrics we will employ monthly metrics.
-This will allow to answer questions as:
-- customer X suddenly tripples level of monthly expences
-- customer Y suddenly changes his busket
+Once the dataset is prepared, we will first explore segmentation using the engineered behavioral features. The resulting groups will be used to characterize common patterns of behavior. We will then identify transactions and customers whose behavior differs significantly from the majority or from the identified segments. Particular attention will be given to spending, purchase composition, and cancellation behavior.
