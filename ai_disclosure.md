@@ -78,6 +78,34 @@ Reference:
 - notebooks/04_CustomerSegmentation.ipynb
 - Stability analysis section for min_samples sweep visualization.
 
+### 2026-07-20
+
+Tool:
+- Claude Code
+
+Purpose:
+- Convert the project proposition draft into a slide-deck presentation (PPTX), matching the same content in a different format.
+
+Representative Prompt:
+- "I need to create a presentation in addition to the project proposition. Same content, different format (PowerPoint/PDF). How to do this fast without compromising academic integrity?"
+
+Representative Activities:
+- Recommended pandoc (already installed locally) for Markdown-to-PPTX conversion as the fastest compliant path.
+- Drafted `docs/presentation.md`: condensed each section of `docs/project_proposition_draft.md` (Abstract, Introduction, Related Work, Proposed Work, Evaluation) into slide-level bullet points.
+- Added a dedicated "AI Acknowledgement" slide in the deck pointing back to this log entry.
+- Ran `pandoc docs/presentation.md -o docs/presentation.pptx --slide-level=1` to generate the deck.
+
+Outcome:
+- Produced `docs/presentation.pptx`, structurally mirroring the approved proposition draft in slide form.
+
+Use in Project:
+- Slide wording was AI-condensed from the student's own already-authored/approved proposal text (no new analysis, interpretation, or claims introduced). Student is responsible for reviewing and editing final slide wording/design before submission.
+
+Reference:
+- docs/project_proposition_draft.md (source content)
+- docs/presentation.md (generated slide markdown)
+- docs/presentation.pptx (generated deck)
+
 ---
 
 ## AI Usage Template
