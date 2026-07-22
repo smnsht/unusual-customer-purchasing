@@ -97,6 +97,10 @@
 <li><a href="https://www.kaggle.com/code/mehmettuzcu/recommendation-systems">Recommendation Systems</a> &ndash; Product recommendations via Association Rule Learning and Collaborative Filtering. Addresses a different question (what a given user/product is likely to want next) rather than characterizing behavioral segments or identifying deviating customers/transactions.</li>
 </ol>
 
+<p><strong>How this work differs from the existing work:</strong></p>
+<p>There is plenty of work related to retail data. It can largely be divided into three main categories: customer segmentation, prediction tasks (e.g., customer churn, likelihood of cancellation), and recommendation systems.</p>
+<p>I chose to do something distinct &ndash; something with a deeper affinity to the &ldquo;Data Mining&rdquo; discipline itself: intentionally avoiding pure classification, regression, and clustering as an end goal, and instead focusing on discovering unknown patterns and analyzing the data.</p>
+
 <p class="sectiontitle">3. Proposed Work</p>
 <p>In order to fulfill the objective, my plan is to build the analysis dataset in two stages. First, I will filter out non-UK transactions and guest transactions (those without a Customer ID). Then I will construct a customer-level table of engineered features derived from the available data:</p>
 <ul>
@@ -130,13 +134,20 @@
 <p>In order to compare &ldquo;how different&rdquo; the two datasets are across features measured on very different scales, we will use Cohen's <em>d</em>.</p>
 <p>In order to interpret the outliers and clusters, we will take the top 5&ndash;10 features with a Cohen's <em>d</em> greater than 0.8 &ndash; those will define the population.</p>
 
-<p class="sectiontitle">5. Discussion</p>
+<p class="sectiontitle">5. Timeline</p>
+<ul>
+<li><strong>Week 1:</strong> EDA, preprocessing, and feature engineering</li>
+<li><strong>Week 2:</strong> Unusual purchasing behavior analysis</li>
+<li><strong>Week 3:</strong> Report preparation</li>
+</ul>
+
+<p class="sectiontitle">6. Discussion</p>
 <p>This section will be updated once all analyses and results have been collected and documented.</p>
 
-<p class="sectiontitle">6. Conclusion</p>
+<p class="sectiontitle">7. Conclusion</p>
 <p>This section will be updated once all analyses and results have been collected and documented.</p>
 
-<p class="sectiontitle">7. References</p>
+<p class="sectiontitle">8. References</p>
 <ol class="refs">
 <li>Jolliffe, I. T. (2002). <em>Principal Component Analysis</em> (2nd ed.). Springer.</li>
 <li><a href="https://hastie.su.domains/ISLR2/Slides/Ch12_Unsupervised_Learning.pdf">ISLR2, Ch12_Unsupervised_Learning.pdf</a>.</li>

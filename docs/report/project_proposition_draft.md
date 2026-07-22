@@ -28,6 +28,13 @@ For instance, if we discover 3 well-defined clusters, we will try to answer the 
 
 4. [Recommendation Systems](https://www.kaggle.com/code/mehmettuzcu/recommendation-systems) - Product recommendations via Association Rule Learning and Collaborative Filtering. Addresses a different question (what a given user/product is likely to want next) rather than characterizing behavioral segments or identifying customers/transactions that deviate from them.
 
+
+**How this work differs from the existing work:**
+
+There is plenty of work related to retail data. It can largely be divided into three main categories: customer segmentation, prediction tasks (e.g., customer churn, likelihood of cancellation), and recommendation systems.
+
+I chose to do something distinct - something with a deeper affinity to the "Data Mining" discipline itself: intentionally avoiding pure classification, regression, and clustering as an end goal, and instead focusing on discovering unknown patterns and analyzing the data.
+
 ## 3. Proposed work
 
 In order to fulfill the objective, my plan is to build the analysis dataset in two stages. First, I will filter out non-UK transactions and guest transactions (those without a CustomerID). Then I will construct a customer-level table of engineered features derived from the available data:
@@ -78,16 +85,23 @@ In order to compare "how different" the two datasets are across features measure
 In order to interpret the outliers and clusters, we will take the top 5-10 features with a Cohen's d greater than 0.8 - those will define the population.
 
 
-## 5. Discussion
+## 5. Timeline
+
+- **Week 1:** EDA, preprocessing, and feature engineering
+- **Week 2:** Unusual purchasing behavior analysis
+- **Week 3:** Report preparation
+
+
+## 6. Discussion
 
 This section will be updated once all analyses and results have been collected and documented.
 
-## 6. Conclusion
+## 7. Conclusion
 
 This section will be updated once all analyses and results have been collected and documented.
 
 
-## 7. References
+## 8. References
 
 1. Jolliffe, I. T. (2002). *Principal Component Analysis* (2nd ed.). Springer.
 2. [ISLR2, Ch12_Unsupervised_Learning.pdf](https://hastie.su.domains/ISLR2/Slides/Ch12_Unsupervised_Learning.pdf)
