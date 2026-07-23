@@ -25,7 +25,8 @@ def plot_eps_metrics(estimator):
     )
     plt.plot(
         estimator.eps_,
-        np.log(estimator.num_noise_points_),
+        # log1p(n) = log(1+n), so it returns 0 instead of -inf when noise count is 0, and is essentially identical to log(n) for larger counts
+        np.log1p(estimator.num_noise_points_),
         label="Log of Num noise points",
         **PLOT_STYLES["noise"],
     )
