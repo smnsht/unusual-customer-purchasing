@@ -106,6 +106,37 @@ Reference:
 - docs/presentation.md (generated slide markdown)
 - docs/presentation.pptx (generated deck)
 
+### 2026-07-23
+
+Tool:
+- Claude Code
+
+Purpose:
+- Deciding which existing plots/markdown findings from the 4 analysis notebooks to include in a 10-slide conclusion for the final report/deck.
+
+Representative Prompt:
+- "If you are asking to add only 10 new pages to existing slides in order to conclude the research and prepare final report, what would you select from my existing 4 notebooks? You can select plots and markdown cells."
+
+Representative Activities:
+- Reviewed all 4 notebooks (01_EDA, 02_PreProcessing, 03_FeatureEngineering, 04_UnusualPurchasingBehavior) for conclusion-relevant content.
+- Proposed a prioritized list of 10 slides (specific plots/markdown cells with source notebook references) and explicitly listed what was excluded and why.
+- On follow-up approval ("yes, please go ahead"), extracted the 5 selected plot images directly from each notebook's cached cell output (base64 PNG data already stored in the .ipynb from prior runs - no re-execution or manual export needed) into `docs/assets/`.
+- Wrote 10 new slides into `docs/slides/presentation.md` (bullets + embedded figures) covering PCA diagnostic, KMeans/DBSCAN model selection and tuning, the final locked DBSCAN result, outlier/cluster population breakdown, both Cohen's d comparisons with characterization, the cancellation-rate context stat, and a closing Conclusions slide.
+- Rendered the updated deck to `docs/slides/project_proposition_slides_03.pptx` via pandoc (kept as a new version rather than overwriting the student's hand-edited `_02` deck).
+- Wrote the same findings as full prose (adapted from the slide bullets into report-style paragraphs) into the Discussion (§6) and Conclusion (§7) sections of `docs/report/project_proposition_draft.md`, with the same 5 figures embedded, and regenerated `docs/report/project_proposition_draft.html`/`.pdf`.
+
+Outcome:
+- `docs/slides/project_proposition_slides_03.pptx` and `docs/report/project_proposition_draft.pdf` both now contain a completed Discussion/Conclusion built from the actual notebook results (DBSCAN: 2 clusters, 134 outliers from 41 customers, silhouette 0.65; Cohen's d characterizations for outliers-vs-clusters and cluster0-vs-cluster1).
+
+Use in Project:
+- Both the slide bullets and report prose were AI-drafted from the notebooks' own numeric results and existing markdown reflections (no new analysis or claims beyond what the notebooks already contain). Student is responsible for reviewing wording, verifying the numbers against the notebooks, and editing before submission.
+
+Reference:
+- notebooks/01_EDA.ipynb#4e28e1f7, notebooks/03_FeatureEngineering.ipynb#59e7c4e7, notebooks/04_UnusualPurchasingBehavior.ipynb#bfe884d7,#bdb58b8b,#384be797 (source plots)
+- docs/assets/*.png (extracted figures)
+- docs/slides/presentation.md, docs/slides/project_proposition_slides_03.pptx
+- docs/report/project_proposition_draft.md, .html, .pdf (Discussion & Conclusion sections)
+
 ---
 
 ## AI Usage Template

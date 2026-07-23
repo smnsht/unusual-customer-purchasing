@@ -61,6 +61,22 @@
   .refs li { margin-bottom: 4pt; }
   a { color: #000; text-decoration: underline; }
   code { font-family: "Courier New", monospace; font-size: 9pt; }
+  .figure {
+    column-span: all;
+    text-align: center;
+    margin: 6pt 0 8pt 0;
+    break-inside: avoid;
+  }
+  .figure img {
+    max-width: 460px;
+    width: 100%;
+    height: auto;
+  }
+  .figure .caption {
+    font-size: 8.5pt;
+    font-style: italic;
+    margin-top: 2pt;
+  }
 </style>
 </head>
 <body>
@@ -142,12 +158,56 @@
 </ul>
 
 <p class="sectiontitle">6. Discussion</p>
-<p>This section will be updated once all analyses and results have been collected and documented.</p>
+<p>As a first diagnostic, I fitted PCA to retain 95% of variance and inspected the first two principal components (below). They explain only about 25% of total variance, so there is no simple low-dimensional shortcut to a cluster structure &ndash; clustering had to work in the full engineered feature space.</p>
+<div class="figure">
+  <img src="../assets/04_pca_scatter.png" alt="PCA of customer features, first two components">
+  <div class="caption">PCA of customer features, first two components</div>
+</div>
+<p>For the baseline KMeans model, I evaluated both a euclidean distance on standardized features and a cosine-oriented variant (features L2-normalized, then euclidean KMeans on the unit vectors, since euclidean ranking on unit vectors matches cosine ranking). The euclidean version was clearly stronger &ndash; best k=3 with silhouette 0.486, versus best k=5 with silhouette 0.161 for the cosine version &ndash; so the cosine path was dropped from further analysis.</p>
+<p>For DBSCAN, <code>eps</code> and <code>min_samples</code> were swept systematically using k-distance plots and stability sweeps. <code>min_samples=23</code> marks the start of a region where the silhouette score and noise-point count stop changing sharply as the parameter increases; <code>eps=9.0</code> was then chosen within that stable region, at the point giving the best silhouette score and an interpretable number of noise points. A cosine-metric DBSCAN variant was also tried, but proved unstable &ndash; silhouette scores went negative and the noise-point count ranged from 0 to over 33,000 across the swept <code>eps</code> values &ndash; so it, too, was dropped in favor of the euclidean configuration.</p>
+<p>The locked model (euclidean, eps=9.0, min_samples=23) produced 2 clusters, 134 noise points (outliers), and a silhouette score of 0.65. These 134 outlier invoices trace back to only 41 distinct customers, and only 13 of those 41 customers also appear in the main clusters &ndash; meaning most outlier customers form a genuinely separate population, rather than being otherwise-typical customers with an occasional unusual invoice.</p>
+<p>An early hint of this pattern actually appeared during feature engineering, well before any clustering: the distribution of invoice totals, unit prices, and quantities (below) showed a long tail of very large order quantities (25,000+ items on some invoices), suggesting a mix of ordinary shoppers and business/reseller accounts.</p>
+<div class="figure">
+  <img src="../assets/03_invoice_distributions.png" alt="Distribution of invoice total, unit price, and quantity">
+  <div class="caption">Distribution of invoice total, unit price, and quantity</div>
+</div>
+<p>To characterize the outliers, I computed Cohen's <em>d</em> between the outlier invoices and the combined clusters, across every feature. The top five features by effect size (below) are dominated by measures of variability &ndash; <code>customer_std_total_quantity</code>, <code>customer_min_invoice_total_amount</code>, <code>customer_max_total_quantity</code>, <code>customer_avg_unit_price</code>, and <code>customer_std_invoice_total_amount</code> &ndash; plus one clear cancellation signal (an extreme negative minimum invoice total). Together, these point to a label of <strong>high-volume, high-volatility wholesale transactions</strong>.</p>
+<div class="figure">
+  <img src="../assets/04_cohens_d_outliers_vs_clusters.png" alt="Cohen's d, outliers vs. clusters, top 5 features">
+  <div class="caption">Cohen's d, outliers vs. clusters, top 5 features</div>
+</div>
+<p>The same approach applied to Cluster 0 vs. Cluster 1 tells a simpler story: a single feature, <code>customer_total_spend</code>, dominates the difference &ndash; about 20 standard deviations apart, with correlated features like <code>customer_max_invoice_total_amount</code> following behind. Cluster 0 averages 13,158 in total spend, versus 598,215 for Cluster 1, so Cluster 1 is best labeled <strong>high total spend</strong>.</p>
+<div class="figure">
+  <img src="../assets/04_cohens_d_cluster0_vs_cluster1.png" alt="Cohen's d, Cluster 0 vs. Cluster 1">
+  <div class="caption">Cohen's d, Cluster 0 vs. Cluster 1</div>
+</div>
+<p>Finally, cancellations remain rare in absolute terms &ndash; only 1.7% of UK transactions in this dataset &ndash; but they show up disproportionately among the outliers, consistent with treating cancellation behavior as one of the two axes of interest defined at the outset.</p>
+<div class="figure">
+  <img src="../assets/01_cancellations_pie.png" alt="Cancellations vs. non-cancellations, UK">
+  <div class="caption">Cancellations vs. non-cancellations, UK</div>
+</div>
 
 <p class="sectiontitle">7. Conclusion</p>
-<p>This section will be updated once all analyses and results have been collected and documented.</p>
+<p>DBSCAN flagged 134 invoices from 41 customers as outliers, falling into two recognizable profiles: high-volume wholesale accounts, and high-value cancellation/adjustment records. The distinguishing features were <code>customer_std_total_quantity</code>, <code>customer_min_invoice_total_amount</code>, <code>customer_max_total_quantity</code>, <code>customer_avg_unit_price</code>, and <code>customer_std_invoice_total_amount</code>. Notably, these outlier customers mostly do not have normal invoices in the main clusters &ndash; they are a separate population, not occasional exceptions within an otherwise-typical customer base. A meaningful 2-cluster split also emerged among the non-outlier invoices, driven almost entirely by total spend.</p>
+<p>This directly answers the question posed in the introduction: unusual purchasing behavior in this dataset is concentrated in a small, identifiable set of customers, rather than being scattered noise across otherwise-ordinary shoppers. That distinction &ndash; a separate population versus scattered noise &ndash; is the main deliverable of this project, and it is exactly the kind of insight that supports the retention, marketing, and operational decisions described in the introduction's discussion of business value.</p>
 
-<p class="sectiontitle">8. References</p>
+<p class="sectiontitle">8. Future Work</p>
+<p class="subsectiontitle">8.1 Temporal Pattern Analysis</p>
+<p>A valuable extension to this work would be to research patterns along a temporal axis:</p>
+<ul>
+<li>Detecting sudden spikes in individual customer behavior: changes in amount spent, items purchased, or shopping trip timing.</li>
+<li>Detecting changes in the population's purchasing behavior as a result of external events: natural disasters, economic crises, war, etc.</li>
+</ul>
+<p>The ability to interpret these changes could potentially be valuable &ndash; for example, to support governance at a state level: ministries of trade, interior, health, etc. could predict explosive demand for certain items and use that knowledge to mitigate shortages.</p>
+<p>This kind of research would require significant effort, and <strong>may not be achievable</strong> with our dataset. Problems include:</p>
+<ul>
+<li>Potential data scarcity: there are many invoices in <strong>total</strong>, but relatively few per individual customer.</li>
+<li>Missing product information beyond the SKU: purchasing 1.5%-fat yogurt versus 3%-fat yogurt looks just as different, at the data level, as purchasing yogurt versus a box of cigarettes.</li>
+<li>There are seasonal trends: in November there are more than twice as many transactions as in January or February.</li>
+<li>Missing regional granularity.</li>
+</ul>
+
+<p class="sectiontitle">9. References</p>
 <ol class="refs">
 <li>Jolliffe, I. T. (2002). <em>Principal Component Analysis</em> (2nd ed.). Springer.</li>
 <li><a href="https://hastie.su.domains/ISLR2/Slides/Ch12_Unsupervised_Learning.pdf">ISLR2, Ch12_Unsupervised_Learning.pdf</a>.</li>

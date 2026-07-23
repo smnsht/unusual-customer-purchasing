@@ -81,13 +81,83 @@ Simon S.
 - Solution: Cohen's d - standardized mean difference, comparable across features
 - Take the top 5-10 features with |Cohen's d| > 0.8 to characterize/define each population
 
-# Discussion & Conclusion
+# PCA: No Easy Shortcut
 
-- To be completed once clustering, outlier detection, and Cohen's d analyses are finalized
+![PCA of customer features, first 2 components](../assets/04_pca_scatter.png)
+
+- PCA fitted to retain 95% of variance
+- First 2 principal components explain only ~25% of total variance
+- No obvious low-dimensional cluster structure - full feature space needed for clustering
+
+# Model Selection: KMeans Baseline
+
+- Distance metric mattered: euclidean vs. cosine, both tested
+- Euclidean on standardized features: best k=3, silhouette = 0.486
+- Cosine on L2-normalized features: best k=5, silhouette = 0.161
+- Euclidean clearly stronger - cosine KMeans dropped from further analysis
+
+# DBSCAN: Parameter Selection
+
+- `eps` and `min_samples` swept systematically (k-distance plot + stability sweeps)
+- `min_samples = 23`: start of a stable region where silhouette/noise behavior stop swinging
+- `eps = 9.0`: chosen within that stable region for the best silhouette and an interpretable noise count
+- Cosine-metric DBSCAN also tried, but unstable (silhouette negative, noise count swings from 0 to 33k+) - dropped
+
+# Final Model: Locked DBSCAN Result
+
+- **Metric:** euclidean &nbsp; **eps:** 9.0 &nbsp; **min_samples:** 23
+- **Clusters found:** 2
+- **Noise points (outliers):** 134
+- **Silhouette score:** 0.65
+
+# Who Are the Outliers?
+
+- 134 outlier invoices trace back to only **41 distinct customers**
+- Only **13** of those 41 also appear in the main clusters
+- Most outlier customers are a **separate population** - not occasional lapses by otherwise-typical customers
+
+# An Early Hint: Bulk Orders
+
+![Distribution of invoice total, unit price, and quantity](../assets/03_invoice_distributions.png)
+
+- Spotted during feature engineering, before any clustering: a long tail of very large quantities (25K+ items per invoice)
+- Suggested a mix of regular shoppers and business/reseller accounts - foreshadowing the outlier finding below
+
+# Outliers vs. Clusters: What Makes Them Different
+
+![Cohen's d, outliers vs. clusters, top 5 features](../assets/04_cohens_d_outliers_vs_clusters.png)
+
+- Largest effect sizes are all **variability** measures: std. total quantity, std. invoice amount, max quantity
+- Plus one cancellation signal: extreme negative minimum invoice total
+- Label: **high-volume, high-volatility wholesale transactions**
+
+# Cluster 0 vs. Cluster 1: What Splits Them
+
+![Cohen's d, Cluster 0 vs. Cluster 1](../assets/04_cohens_d_cluster0_vs_cluster1.png)
+
+- Single dominant driver: `customer_total_spend` - about 20 standard deviations apart
+- Cluster 0 avg. total spend: **13,158**
+- Cluster 1 avg. total spend: **598,215**
+- Label: Cluster 1 = **high total spend** customers
+
+# Cancellations, in Context
+
+![Cancellations vs. non-cancellations, UK](../assets/01_cancellations_pie.png)
+
+- Only 1.7% of UK transactions are cancellations
+- Rare, but part of what defines the outlier profile above (extreme negative invoice minimums)
+
+# Conclusions
+
+- DBSCAN flagged 134 outlier invoices from 41 customers, falling into two profiles: **high-volume wholesale accounts** and **high-value cancellation/adjustment records**
+- Distinguishing features: `customer_std_total_quantity`, `customer_min_invoice_total_amount`, `customer_max_total_quantity`, `customer_avg_unit_price`, `customer_std_invoice_total_amount`
+- These outlier customers mostly do **not** have normal invoices in the main clusters - a genuinely separate population
+- A meaningful 2-cluster split also emerged, driven by total spend
+- Answers the original question: unusual behavior is concentrated in a small, identifiable customer population - not scattered noise across otherwise-typical customers
 
 # References
 
-- Full reference list in the project proposition document (`project_proposition_draft.md`, Section 7)
+- Full reference list in the project proposition document (`project_proposition_draft.md`, Section 8)
 - Covers: PCA (Jolliffe 2002), KMeans (MacQueen 1967), DBSCAN (Ester et al. 1996; Schubert et al. 2017),
   silhouette score & DBSCAN docs (scikit-learn), Cohen's d (Cohen 1988), explainable anomaly detection (Li et al. 2023)
 
