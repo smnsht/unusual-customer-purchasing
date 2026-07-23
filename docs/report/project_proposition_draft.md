@@ -94,14 +94,57 @@ In order to interpret the outliers and clusters, we will take the top 5-10 featu
 
 ## 6. Discussion
 
-This section will be updated once all analyses and results have been collected and documented.
+As a first diagnostic, I fitted PCA to retain 95% of variance and inspected the first two principal components (below). They explain only about 25% of total variance, so there is no simple low-dimensional shortcut to a cluster structure - clustering had to work in the full engineered feature space.
+
+![PCA of customer features, first two components](../assets/04_pca_scatter.png)
+
+For the baseline KMeans model, I evaluated both a euclidean distance on standardized features and a cosine-oriented variant (features L2-normalized, then euclidean KMeans on the unit vectors, since euclidean ranking on unit vectors matches cosine ranking). The euclidean version was clearly stronger - best k=3 with silhouette 0.486, versus best k=5 with silhouette 0.161 for the cosine version - so the cosine path was dropped from further analysis.
+
+For DBSCAN, `eps` and `min_samples` were swept systematically using k-distance plots and stability sweeps. `min_samples=23` marks the start of a region where the silhouette score and noise-point count stop changing sharply as the parameter increases; `eps=9.0` was then chosen within that stable region, at the point giving the best silhouette score and an interpretable number of noise points. A cosine-metric DBSCAN variant was also tried, but proved unstable - silhouette scores went negative and the noise-point count ranged from 0 to over 33,000 across the swept `eps` values - so it, too, was dropped in favor of the euclidean configuration.
+
+The locked model (euclidean, eps=9.0, min_samples=23) produced 2 clusters, 134 noise points (outliers), and a silhouette score of 0.65. These 134 outlier invoices trace back to only 41 distinct customers, and only 13 of those 41 customers also appear in the main clusters - meaning most outlier customers form a genuinely separate population, rather than being otherwise-typical customers with an occasional unusual invoice.
+
+An early hint of this pattern actually appeared during feature engineering, well before any clustering: the distribution of invoice totals, unit prices, and quantities (below) showed a long tail of very large order quantities (25,000+ items on some invoices), suggesting a mix of ordinary shoppers and business/reseller accounts.
+
+![Distribution of invoice total, unit price, and quantity](../assets/03_invoice_distributions.png)
+
+To characterize the outliers, I computed Cohen's d between the outlier invoices and the combined clusters, across every feature. The top five features by effect size (below) are dominated by measures of variability - `customer_std_total_quantity`, `customer_min_invoice_total_amount`, `customer_max_total_quantity`, `customer_avg_unit_price`, and `customer_std_invoice_total_amount` - plus one clear cancellation signal (an extreme negative minimum invoice total). Together, these point to a label of **high-volume, high-volatility wholesale transactions**.
+
+![Cohen's d, outliers vs. clusters, top 5 features](../assets/04_cohens_d_outliers_vs_clusters.png)
+
+The same approach applied to Cluster 0 vs. Cluster 1 tells a simpler story: a single feature, `customer_total_spend`, dominates the difference - about 20 standard deviations apart, with correlated features like `customer_max_invoice_total_amount` following behind. Cluster 0 averages 13,158 in total spend, versus 598,215 for Cluster 1, so Cluster 1 is best labeled **high total spend**.
+
+![Cohen's d, Cluster 0 vs. Cluster 1](../assets/04_cohens_d_cluster0_vs_cluster1.png)
+
+Finally, cancellations remain rare in absolute terms - only 1.7% of UK transactions in this dataset - but they show up disproportionately among the outliers, consistent with treating cancellation behavior as one of the two axes of interest defined at the outset.
+
+![Cancellations vs. non-cancellations, UK](../assets/01_cancellations_pie.png)
 
 ## 7. Conclusion
 
-This section will be updated once all analyses and results have been collected and documented.
+DBSCAN flagged 134 invoices from 41 customers as outliers, falling into two recognizable profiles: high-volume wholesale accounts, and high-value cancellation/adjustment records. The distinguishing features were `customer_std_total_quantity`, `customer_min_invoice_total_amount`, `customer_max_total_quantity`, `customer_avg_unit_price`, and `customer_std_invoice_total_amount`. Notably, these outlier customers mostly do not have normal invoices in the main clusters - they are a separate population, not occasional exceptions within an otherwise-typical customer base. A meaningful 2-cluster split also emerged among the non-outlier invoices, driven almost entirely by total spend.
 
+This directly answers the question posed in the introduction: unusual purchasing behavior in this dataset is concentrated in a small, identifiable set of customers, rather than being scattered noise across otherwise-ordinary shoppers. That distinction - a separate population versus scattered noise - is the main deliverable of this project, and it is exactly the kind of insight that supports the retention, marketing, and operational decisions described in the introduction's discussion of business value.
 
-## 8. References
+## 8. Future Work
+
+### 8.1 Temporal Pattern Analysis
+
+A valuable extension to this work would be to research patterns along a temporal axis:
+
+- Detecting sudden spikes in individual customer behavior: changes in amount spent, items purchased, or shopping trip timing.
+- Detecting changes in the population's purchasing behavior as a result of external events: natural disasters, economic crises, war, etc.
+
+The ability to interpret these changes could potentially be valuable - for example, to support governance at a state level: ministries of trade, interior, health, etc. could predict explosive demand for certain items and use that knowledge to mitigate shortages.
+
+This kind of research would require significant effort, and **may not be achievable** with our dataset. Problems include:
+
+- Potential data scarcity: there are many invoices in **total**, but relatively few per individual customer.
+- Missing product information beyond the SKU: purchasing 1.5%-fat yogurt versus 3%-fat yogurt looks just as different, at the data level, as purchasing yogurt versus a box of cigarettes.
+- There are seasonal trends: in November there are more than twice as many transactions as in January or February.
+- Missing regional granularity.
+
+## 9. References
 
 1. Jolliffe, I. T. (2002). *Principal Component Analysis* (2nd ed.). Springer.
 2. [ISLR2, Ch12_Unsupervised_Learning.pdf](https://hastie.su.domains/ISLR2/Slides/Ch12_Unsupervised_Learning.pdf)
